@@ -1,0 +1,24 @@
+services:
+  # Backend API
+  - type: web
+    name: devtool-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+    plan: free
+
+  # Frontend Streamlit
+  - type: web
+    name: devtool-frontend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: BACKEND_URL
+        value: https://devtool-backend.onrender.com
+    plan: free
