@@ -9,7 +9,7 @@ from backend.storage.webhook_store import webhook_store
 from backend.utils.ua_parser import parse_user_agent
 
 
-def create_endpoint(base_url: str) -> WebhookEndpoint:
+def create_endpoint(base_url: str, session_id: str) -> WebhookEndpoint:
     """Create a new webhook endpoint with a random ID."""
     endpoint_id = uuid.uuid4().hex[:12]
     endpoint = WebhookEndpoint(
@@ -17,7 +17,7 @@ def create_endpoint(base_url: str) -> WebhookEndpoint:
         url=f"{base_url}/hook/{endpoint_id}",
         created_at=datetime.now(timezone.utc).isoformat(),
     )
-    webhook_store.create_endpoint(endpoint)
+    webhook_store.create_endpoint(session_id, endpoint)
     return endpoint
 
 
@@ -67,8 +67,9 @@ def get_endpoint(endpoint_id: str) -> WebhookEndpoint | None:
     return webhook_store.get_endpoint(endpoint_id)
 
 
-def list_endpoints() -> list[WebhookEndpoint]:
-    return webhook_store.list_endpoints()
+def list_endpoints(session_id: str) -> list[WebhookEndpoint]:
+    """List endpoints belonging to this session only."""
+    return webhook_store.list_endpoints(session_id)
 
 
 def clear_events(endpoint_id: str) -> None:

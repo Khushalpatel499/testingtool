@@ -44,14 +44,14 @@ def clear_history() -> None:
 def create_webhook_endpoint() -> dict:
     """Create a new webhook endpoint."""
     with httpx.Client(timeout=_TIMEOUT) as client:
-        resp = client.post(f"{BACKEND_URL}/webhooks/create")
+        resp = client.post(f"{BACKEND_URL}/webhooks/create", headers=_headers())
         return resp.json()
 
 
 def list_webhook_endpoints() -> list[dict]:
-    """List all webhook endpoints."""
+    """List all webhook endpoints for this session."""
     with httpx.Client(timeout=_TIMEOUT) as client:
-        resp = client.get(f"{BACKEND_URL}/webhooks/list")
+        resp = client.get(f"{BACKEND_URL}/webhooks/list", headers=_headers())
         return resp.json()
 
 

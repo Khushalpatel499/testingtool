@@ -1,13 +1,13 @@
 """Webhook routes - endpoint management and incoming webhook receiver."""
 
-from fastapi import APIRouter, Request
+from typing import Optional
+from fastapi import APIRouter, Request, Header
 from fastapi.responses import JSONResponse
 
 from backend.services.webhook_service import (
     create_endpoint,
     process_incoming_request,
     get_events,
-    get_endpoint,
     list_endpoints,
     clear_events,
     delete_endpoint,
@@ -17,17 +17,17 @@ router = APIRouter(tags=["Webhook"])
 
 
 @router.post("/webhooks/create")
-async def create_webhook_endpoint(request: Request):
+async def create_webhook_endpoint(request: Request, x_session_id: Optional[str] = Header(default="default")):
     """Create a new webhook endpoint."""
     base_url = str(request.base_url).rstrip("/")
-    endpoint = create_endpoint(base_url)
+    endpoint = create_endpoint(base_url, session_id=x_session_id)
     return endpoint.model_dump()
 
 
 @router.get("/webhooks/list")
-async def list_webhook_endpoints():
-    """List all active webhook endpoints."""
-    return [ep.model_dump() for ep in list_endpoints()]
+async def list_webhook_endpoints(x_session_id: Optional[str] = Header(default="default")):
+    """List webhook endpoints for this session only."""
+    return [ep.model_dump() for ep in list_endpoints(session_id=x_session_id)]
 
 
 @router.get("/webhooks/{endpoint_id}/events")
@@ -61,17 +61,11 @@ async def receive_webhook(endpoint_id: str, request: Request):
     Accepts ANY method and ANY content type.
     Always returns {"success": true}.
     """
-    # Read raw body bytes
     raw_bytes = await request.body()
     raw_body = raw_bytes.decode("utf-8", errors="replace")
 
-    # Extract headers as dict
     headers = dict(request.headers)
-
-    # Extract query params
     query_params = dict(request.query_params)
-
-    # Client IP
     client_ip = request.client.host if request.client else "unknown"
 
     event = process_incoming_request(
